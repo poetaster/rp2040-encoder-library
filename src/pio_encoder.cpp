@@ -34,15 +34,35 @@ PioEncoder::PioEncoder(const uint8_t pin, const bool flip, const int zero_offset
 void PioEncoder::begin(){
     pinMode(pin, INPUT);
     pinMode(pin+1, INPUT);
+    int base = 0;
 
+    /* checks which pin range and set upper rp2350
+     * 0-31 or > 32
+     * and assigns the base. 
+     * */
+    
+    if(pin > 31 && pio_get_gpio_base(pio) == 0) {
+        this->pio = PIO pio1;
+        pio_set_gpio_base(pio, 0x10);
+        //base = 16;
+    } else if (pin < 31) {
+        this->pio = PIO pio0;
+        pio_set_gpio_base(pio, 0);
+        base = 0;
+    }
+    
     if (!not_first_instance){
         offset = pio_add_program(pio, &quadrature_encoder_program);
     }
+
     not_first_instance=true;
+
     if (sm==-1){
         sm = pio_claim_unused_sm(pio, true);
     }
+
     sm=sm;
+
     quadrature_encoder_program_init(pio,sm,offset,pin,max_step_rate);
 }
 
