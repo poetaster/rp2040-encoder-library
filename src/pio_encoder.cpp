@@ -20,7 +20,8 @@
 uint PioEncoder::offset;
 bool PioEncoder::not_first_instance;
 
-PioEncoder::PioEncoder(const uint8_t pin, const bool flip, const int zero_offset, const uint8_t count_mode, PIO pio, const uint sm, const int max_step_rate){
+
+PioEncoder::PioEncoder(const uint pin, PIO pio, const uint sm, const bool flip, const int zero_offset, const uint8_t count_mode, const int max_step_rate){
     static uint offset;
     this->pin = pin;
     this->pio = pio;
@@ -34,23 +35,12 @@ PioEncoder::PioEncoder(const uint8_t pin, const bool flip, const int zero_offset
 void PioEncoder::begin(){
     pinMode(pin, INPUT);
     pinMode(pin+1, INPUT);
-    int base = 0;
 
-    /* checks which pin range and set upper rp2350
-     * 0-31 or > 32
-     * and assigns the base. 
-     * */
-    
-    if(pin > 31 && pio_get_gpio_base(pio) == 0) {
+    if(pin > 31 && pio_get_gpio_base(pio) != 16) {
         this->pio = PIO pio1;
-        pio_set_gpio_base(pio, 0x10);
-        //base = 16;
-    } else if (pin < 31) {
-        this->pio = PIO pio0;
-        pio_set_gpio_base(pio, 0);
-        base = 0;
+        pio_set_gpio_base(pio, 16);
     }
-    
+     
     if (!not_first_instance){
         offset = pio_add_program(pio, &quadrature_encoder_program);
     }
@@ -62,9 +52,12 @@ void PioEncoder::begin(){
     }
 
     sm=sm;
-
+    // this does NOT work with both ranges.
+    //bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&quadrature_encoder_program, &pio, &sm, &offset, pin, 1, true);
+    //
     quadrature_encoder_program_init(pio,sm,offset,pin,max_step_rate);
 }
+
 
 void PioEncoder::reset(const int reset_value){
     quadrature_encoder_reset(pio, sm);
@@ -83,6 +76,7 @@ void PioEncoder::flip(const bool x){
 void PioEncoder::setMode(const uint8_t mode){
     count_mode = mode;
 }
+
 
 int PioEncoder::getCount(){
     return flip_it*(quadrature_encoder_get_count(pio, sm)>>count_mode)+zero_offset;

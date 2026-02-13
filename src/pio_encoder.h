@@ -28,7 +28,7 @@
 
 class PioEncoder{
     private:
-        uint8_t pin;
+        uint pin;
         uint sm;
         PIO pio;
         int max_step_rate;
@@ -39,8 +39,8 @@ class PioEncoder{
         static uint offset;
         static bool not_first_instance;
         
-        PioEncoder(const uint8_t pin, const bool flip = false, const int zero_offset = 0, const uint8_t count_mode = COUNT_4X,
-                   PIO pio = pio0, const uint sm = -1, const int max_step_rate = 0);
+        PioEncoder(const uint pin, PIO pio = pio0, const uint sm = -1, const bool flip = false, 
+                   const int zero_offset = 0, const uint8_t count_mode = COUNT_4X, const int max_step_rate = 0);
         void begin();
         void reset(const int reset_value = 0);
         void flip(const bool x=true);
@@ -49,4 +49,6 @@ class PioEncoder{
 };
 
 
+
 #endif
+
